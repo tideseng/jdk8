@@ -190,7 +190,7 @@ package java.util;
  * @since  1.6
  * @param <E> the type of elements held in this collection
  */
-public interface Deque<E> extends Queue<E> {
+public interface Deque<E> extends Queue<E> { // 双端队列，是一种特殊的队列，它的两端都可以进出元素，具有队列的特性，还可以作为栈使用
     /**
      * Inserts the specified element at the front of this deque if it is
      * possible to do so immediately without violating capacity restrictions,
@@ -427,7 +427,7 @@ public interface Deque<E> extends Queue<E> {
      * @throws IllegalArgumentException if some property of the specified
      *         element prevents it from being added to this deque
      */
-    boolean offer(E e);
+    boolean offer(E e); // 入队
 
     /**
      * Retrieves and removes the head of the queue represented by this deque
@@ -452,7 +452,7 @@ public interface Deque<E> extends Queue<E> {
      * @return the first element of this deque, or {@code null} if
      *         this deque is empty
      */
-    E poll();
+    E poll(); // 出队
 
     /**
      * Retrieves, but does not remove, the head of the queue represented by
@@ -500,7 +500,7 @@ public interface Deque<E> extends Queue<E> {
      * @throws IllegalArgumentException if some property of the specified
      *         element prevents it from being added to this deque
      */
-    void push(E e);
+    void push(E e); // 入栈
 
     /**
      * Pops an element from the stack represented by this deque.  In other
@@ -512,7 +512,7 @@ public interface Deque<E> extends Queue<E> {
      *         of the stack represented by this deque)
      * @throws NoSuchElementException if this deque is empty
      */
-    E pop();
+    E pop(); // 出栈
 
 
     // *** Collection methods ***
