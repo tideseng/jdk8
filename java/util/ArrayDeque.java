@@ -82,7 +82,7 @@ import java.util.function.Consumer;
  * @since   1.6
  * @param <E> the type of elements held in this collection
  */
-public class ArrayDeque<E> extends AbstractCollection<E>
+public class ArrayDeque<E> extends AbstractCollection<E> // 基于数组实现的双端队列，非线程安全，除了作为队列使用，还可以作为栈来使用，出队入队是通过头尾指针循环利用数组实现、当头尾指针相遇时扩容2倍
                            implements Deque<E>, Cloneable, Serializable
 {
     /**
@@ -95,26 +95,26 @@ public class ArrayDeque<E> extends AbstractCollection<E>
      * other.  We also guarantee that all array cells not holding
      * deque elements are always null.
      */
-    transient Object[] elements; // non-private to simplify nested class access
+    transient Object[] elements; // non-private to simplify nested class access // 存储元素的数组
 
     /**
      * The index of the element at the head of the deque (which is the
      * element that would be removed by remove() or pop()); or an
      * arbitrary number equal to tail if the deque is empty.
      */
-    transient int head;
+    transient int head; // 对头索引/指针
 
     /**
      * The index at which the next element would be added to the tail
      * of the deque (via addLast(E), add(E), or push(E)).
      */
-    transient int tail;
+    transient int tail; // 队尾索引/指针
 
     /**
      * The minimum capacity that we'll use for a newly created deque.
      * Must be a power of 2.
      */
-    private static final int MIN_INITIAL_CAPACITY = 8;
+    private static final int MIN_INITIAL_CAPACITY = 8; // 数组最小初始容量
 
     // ******  Array allocation and resizing utilities ******
 
@@ -123,11 +123,11 @@ public class ArrayDeque<E> extends AbstractCollection<E>
      *
      * @param numElements  the number of elements to hold
      */
-    private void allocateElements(int numElements) {
+    private void allocateElements(int numElements) { // 计算容量，如果指定的容量小于8则容量为8，否则为大于numElements的最接近的2的n次方
         int initialCapacity = MIN_INITIAL_CAPACITY;
         // Find the best power of two to hold elements.
         // Tests "<=" because arrays aren't kept full.
-        if (numElements >= initialCapacity) {
+        if (numElements >= initialCapacity) { // 计算出大于numElements的最接近的2的n次方
             initialCapacity = numElements;
             initialCapacity |= (initialCapacity >>>  1);
             initialCapacity |= (initialCapacity >>>  2);
@@ -139,7 +139,7 @@ public class ArrayDeque<E> extends AbstractCollection<E>
             if (initialCapacity < 0)   // Too many elements, must back off
                 initialCapacity >>>= 1;// Good luck allocating 2 ^ 30 elements
         }
-        elements = new Object[initialCapacity];
+        elements = new Object[initialCapacity]; // 初始化存储元素的数组
     }
 
     /**
@@ -226,7 +226,7 @@ public class ArrayDeque<E> extends AbstractCollection<E>
     public void addFirst(E e) {
         if (e == null)
             throw new NullPointerException();
-        elements[head = (head - 1) & (elements.length - 1)] = e;
+        elements[head = (head - 1) & (elements.length - 1)] = e; // (head - 1) & (elements.length - 1)的结果依次为15、14、...、1、0
         if (head == tail)
             doubleCapacity();
     }
@@ -243,7 +243,7 @@ public class ArrayDeque<E> extends AbstractCollection<E>
         if (e == null)
             throw new NullPointerException();
         elements[tail] = e;
-        if ( (tail = (tail + 1) & (elements.length - 1)) == head)
+        if ( (tail = (tail + 1) & (elements.length - 1)) == head) // (tail + 1) & (elements.length - 1)的结果依次为1、2、...、15、0
             doubleCapacity();
     }
 
