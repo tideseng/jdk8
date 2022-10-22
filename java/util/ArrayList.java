@@ -103,27 +103,27 @@ import java.util.function.UnaryOperator;
  * @since   1.2
  */
 
-public class ArrayList<E> extends AbstractList<E>
-        implements List<E>, RandomAccess, Cloneable, java.io.Serializable
+public class ArrayList<E> extends AbstractList<E> // 动态数组，线程不安全，线程安全版本是CopyOnWriteArrayList，支持扩容（当需要的最小容量大于存储元素的真实数组容量时，扩容到原容量的1.5倍），不支持缩容
+        implements List<E>, RandomAccess, Cloneable, java.io.Serializable // 实现RandomAccess标记接口，支持随机访问，即可以通过下标访问，该集合的for循环要比迭代快一点
 {
     private static final long serialVersionUID = 8683452581122892189L;
 
     /**
      * Default initial capacity.
      */
-    private static final int DEFAULT_CAPACITY = 10;
+    private static final int DEFAULT_CAPACITY = 10; // 默认初始容量为10，当通过new ArrayList()方法不指定初始容量，添加第一个元素时使用
 
     /**
      * Shared empty array instance used for empty instances.
      */
-    private static final Object[] EMPTY_ELEMENTDATA = {};
+    private static final Object[] EMPTY_ELEMENTDATA = {}; // 空数组，当通过new ArrayList(0)方法指定初始容量为0时使用，赋值给elementData
 
     /**
      * Shared empty array instance used for default sized empty instances. We
      * distinguish this from EMPTY_ELEMENTDATA to know how much to inflate when
      * first element is added.
      */
-    private static final Object[] DEFAULTCAPACITY_EMPTY_ELEMENTDATA = {};
+    private static final Object[] DEFAULTCAPACITY_EMPTY_ELEMENTDATA = {}; // 空数组，当通过new ArrayList()方法不指定初始容量时使用，赋值给elementData（添加第一个元素时会重新初始为默认容量大小）
 
     /**
      * The array buffer into which the elements of the ArrayList are stored.
@@ -131,14 +131,14 @@ public class ArrayList<E> extends AbstractList<E>
      * empty ArrayList with elementData == DEFAULTCAPACITY_EMPTY_ELEMENTDATA
      * will be expanded to DEFAULT_CAPACITY when the first element is added.
      */
-    transient Object[] elementData; // non-private to simplify nested class access
+    transient Object[] elementData; // non-private to simplify nested class access // 存储元素的真实数组（使用transient是为了不序列化该属性，不会根据数组的长度序列化元素，而是自己根据size大小来序列化真实的元素，减少了空间占用）
 
     /**
      * The size of the ArrayList (the number of elements it contains).
      *
      * @serial
      */
-    private int size;
+    private int size; // 数组中存储元素的真正个数，而不是elementData数组的长度
 
     /**
      * Constructs an empty list with the specified initial capacity.
@@ -147,8 +147,8 @@ public class ArrayList<E> extends AbstractList<E>
      * @throws IllegalArgumentException if the specified initial capacity
      *         is negative
      */
-    public ArrayList(int initialCapacity) {
-        if (initialCapacity > 0) {
+    public ArrayList(int initialCapacity) { // 指定初始容量
+        if (initialCapacity > 0) { // 如果初始容量大于0则初始化elementData为初始容量大小，如果等于0则使用EMPTY_ELEMENTDATA空数组，如果小于0则抛出异常
             this.elementData = new Object[initialCapacity];
         } else if (initialCapacity == 0) {
             this.elementData = EMPTY_ELEMENTDATA;
@@ -161,8 +161,8 @@ public class ArrayList<E> extends AbstractList<E>
     /**
      * Constructs an empty list with an initial capacity of ten.
      */
-    public ArrayList() {
-        this.elementData = DEFAULTCAPACITY_EMPTY_ELEMENTDATA;
+    public ArrayList() { // 不指定初始容量
+        this.elementData = DEFAULTCAPACITY_EMPTY_ELEMENTDATA; // 初始化为DEFAULTCAPACITY_EMPTY_ELEMENTDATA空数组，会在添加第一个元素的时候扩容到默认大小10
     }
 
     /**
@@ -173,13 +173,13 @@ public class ArrayList<E> extends AbstractList<E>
      * @param c the collection whose elements are to be placed into this list
      * @throws NullPointerException if the specified collection is null
      */
-    public ArrayList(Collection<? extends E> c) {
-        elementData = c.toArray();
-        if ((size = elementData.length) != 0) {
+    public ArrayList(Collection<? extends E> c) { // 指定初始集合元素（浅拷贝）
+        elementData = c.toArray(); // 初始化elementData，集合转数组
+        if ((size = elementData.length) != 0) { // 当传入的集合元素个数不为0时，检查c.toArray()返回的类型
             // c.toArray might (incorrectly) not return Object[] (see 6260652)
-            if (elementData.getClass() != Object[].class)
+            if (elementData.getClass() != Object[].class) // 检查c.toArray()返回的是不是Object[]类型，如果不是，重新拷贝成Object[].class类型
                 elementData = Arrays.copyOf(elementData, size, Object[].class);
-        } else {
+        } else { // 当传入的集合元素个数为0时，初始化elementData为EMPTY_ELEMENTDATA空数组
             // replace with empty array.
             this.elementData = EMPTY_ELEMENTDATA;
         }
@@ -219,20 +219,20 @@ public class ArrayList<E> extends AbstractList<E>
         }
     }
 
-    private void ensureCapacityInternal(int minCapacity) {
-        if (elementData == DEFAULTCAPACITY_EMPTY_ELEMENTDATA) {
+    private void ensureCapacityInternal(int minCapacity) { // 检查是否需要扩容
+        if (elementData == DEFAULTCAPACITY_EMPTY_ELEMENTDATA) { // 当elementData为DEFAULTCAPACITY_EMPTY_ELEMENTDATA空数组时，将当前需要的最小容量与默认容量比较并取最大值
             minCapacity = Math.max(DEFAULT_CAPACITY, minCapacity);
         }
 
-        ensureExplicitCapacity(minCapacity);
+        ensureExplicitCapacity(minCapacity); // 检查是否需要扩容
     }
 
-    private void ensureExplicitCapacity(int minCapacity) {
+    private void ensureExplicitCapacity(int minCapacity) { // 检查是否需要扩容
         modCount++;
 
         // overflow-conscious code
-        if (minCapacity - elementData.length > 0)
-            grow(minCapacity);
+        if (minCapacity - elementData.length > 0) // 当前需要的最小容量大于存储元素的真实数组容量时，进行扩容
+            grow(minCapacity); // 扩容
     }
 
     /**
@@ -249,16 +249,16 @@ public class ArrayList<E> extends AbstractList<E>
      *
      * @param minCapacity the desired minimum capacity
      */
-    private void grow(int minCapacity) {
+    private void grow(int minCapacity) { // 扩容，传入需要的最小容量
         // overflow-conscious code
-        int oldCapacity = elementData.length;
-        int newCapacity = oldCapacity + (oldCapacity >> 1);
-        if (newCapacity - minCapacity < 0)
+        int oldCapacity = elementData.length; // 旧容量为存储元素的真实数组容量
+        int newCapacity = oldCapacity + (oldCapacity >> 1); // 新容量为旧容量的1.5倍
+        if (newCapacity - minCapacity < 0) // 当新容量小于最小容量时，则新容量为最小容量
             newCapacity = minCapacity;
-        if (newCapacity - MAX_ARRAY_SIZE > 0)
+        if (newCapacity - MAX_ARRAY_SIZE > 0) // 当新容量大于最大容量时，则新容量为最大容量
             newCapacity = hugeCapacity(minCapacity);
         // minCapacity is usually close to size, so this is a win:
-        elementData = Arrays.copyOf(elementData, newCapacity);
+        elementData = Arrays.copyOf(elementData, newCapacity); // 将元来的数据拷贝到新数组中
     }
 
     private static int hugeCapacity(int minCapacity) {
@@ -414,7 +414,7 @@ public class ArrayList<E> extends AbstractList<E>
     // Positional Access Operations
 
     @SuppressWarnings("unchecked")
-    E elementData(int index) {
+    E elementData(int index) { // 获取数组index位置的元素
         return (E) elementData[index];
     }
 
@@ -425,10 +425,10 @@ public class ArrayList<E> extends AbstractList<E>
      * @return the element at the specified position in this list
      * @throws IndexOutOfBoundsException {@inheritDoc}
      */
-    public E get(int index) {
-        rangeCheck(index);
+    public E get(int index) { // 获取指定索引位置的元素，时间复杂度为O(1)
+        rangeCheck(index); // 检查是否越界
 
-        return elementData(index);
+        return elementData(index); // 返回数组index位置的元素
     }
 
     /**
@@ -454,9 +454,9 @@ public class ArrayList<E> extends AbstractList<E>
      * @param e element to be appended to this list
      * @return <tt>true</tt> (as specified by {@link Collection#add})
      */
-    public boolean add(E e) {
-        ensureCapacityInternal(size + 1);  // Increments modCount!!
-        elementData[size++] = e;
+    public boolean add(E e) { // 添加元素到队尾，平均时间复杂度为O(1)
+        ensureCapacityInternal(size + 1);  // Increments modCount!! // 检查是否需要扩容
+        elementData[size++] = e; // 将元素插入到队尾
         return true;
     }
 
@@ -469,7 +469,7 @@ public class ArrayList<E> extends AbstractList<E>
      * @param element element to be inserted
      * @throws IndexOutOfBoundsException {@inheritDoc}
      */
-    public void add(int index, E element) {
+    public void add(int index, E element) { // 添加元素到指定位置，平均时间复杂度为O(n)
         rangeCheckForAdd(index);
 
         ensureCapacityInternal(size + 1);  // Increments modCount!!
@@ -748,22 +748,22 @@ public class ArrayList<E> extends AbstractList<E>
      *             instance is emitted (int), followed by all of its elements
      *             (each an <tt>Object</tt>) in the proper order.
      */
-    private void writeObject(java.io.ObjectOutputStream s)
+    private void writeObject(java.io.ObjectOutputStream s) // 自定义控制序列化的方式，在ObjectStreamClass#getPrivateMethod()方法中会通过反射获取到writeObject()方法
         throws java.io.IOException{
         // Write out element count, and any hidden stuff
-        int expectedModCount = modCount;
-        s.defaultWriteObject();
+        int expectedModCount = modCount; // 防止序列化期间有修改
+        s.defaultWriteObject(); // 将当前类的非transient非static属性写到输出流中
 
         // Write out size as capacity for behavioural compatibility with clone()
-        s.writeInt(size);
+        s.writeInt(size); // 写出元素个数
 
         // Write out all elements in the proper order.
         for (int i=0; i<size; i++) {
-            s.writeObject(elementData[i]);
+            s.writeObject(elementData[i]); // 依次写出元素个数
         }
 
         if (modCount != expectedModCount) {
-            throw new ConcurrentModificationException();
+            throw new ConcurrentModificationException(); // 如果期间有修改，则抛出异常
         }
     }
 
@@ -771,24 +771,24 @@ public class ArrayList<E> extends AbstractList<E>
      * Reconstitute the <tt>ArrayList</tt> instance from a stream (that is,
      * deserialize it).
      */
-    private void readObject(java.io.ObjectInputStream s)
+    private void readObject(java.io.ObjectInputStream s) // 自定义控制反序列化的方式，在ObjectStreamClass#getPrivateMethod()方法中会通过反射获取到readObject方法
         throws java.io.IOException, ClassNotFoundException {
-        elementData = EMPTY_ELEMENTDATA;
+        elementData = EMPTY_ELEMENTDATA; // 声明为空数组
 
         // Read in size, and any hidden stuff
-        s.defaultReadObject();
+        s.defaultReadObject(); // 从流中读取当前类的非transient非static属性
 
         // Read in capacity
-        s.readInt(); // ignored
+        s.readInt(); // ignored // 读取元素个数
 
         if (size > 0) {
             // be like clone(), allocate array based upon size not capacity
-            ensureCapacityInternal(size);
+            ensureCapacityInternal(size); // 检查是否需要扩容
 
             Object[] a = elementData;
             // Read in all elements in the proper order.
             for (int i=0; i<size; i++) {
-                a[i] = s.readObject();
+                a[i] = s.readObject(); // 依次读取元素到数组中
             }
         }
     }
@@ -1212,7 +1212,7 @@ public class ArrayList<E> extends AbstractList<E>
             return new SubList(this, offset, fromIndex, toIndex);
         }
 
-        private void rangeCheck(int index) {
+        private void rangeCheck(int index) { // 检查是否越界
             if (index < 0 || index >= this.size)
                 throw new IndexOutOfBoundsException(outOfBoundsMsg(index));
         }
