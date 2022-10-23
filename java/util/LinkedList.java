@@ -82,23 +82,23 @@ import java.util.function.Consumer;
 
 public class LinkedList<E>
     extends AbstractSequentialList<E>
-    implements List<E>, Deque<E>, Cloneable, java.io.Serializable
+    implements List<E>, Deque<E>, Cloneable, java.io.Serializable // 基于双向链表实现的List，除了作为List使用，还可以作为队列或者栈来使用，不支持随机访问，在功能上等于ArrayList+ArrayDeque
 {
-    transient int size = 0;
+    transient int size = 0; // 元素个数
 
     /**
      * Pointer to first node.
      * Invariant: (first == null && last == null) ||
      *            (first.prev == null && first.item != null)
      */
-    transient Node<E> first;
+    transient Node<E> first; // 头节点
 
     /**
      * Pointer to last node.
      * Invariant: (first == null && last == null) ||
      *            (last.next == null && last.item != null)
      */
-    transient Node<E> last;
+    transient Node<E> last; // 尾节点
 
     /**
      * Constructs an empty list.
@@ -122,10 +122,10 @@ public class LinkedList<E>
     /**
      * Links e as first element.
      */
-    private void linkFirst(E e) {
+    private void linkFirst(E e) { // 添加元素到头节点
         final Node<E> f = first;
-        final Node<E> newNode = new Node<>(null, e, f);
-        first = newNode;
+        final Node<E> newNode = new Node<>(null, e, f); // 构建头节点
+        first = newNode; // 赋值给头节点
         if (f == null)
             last = newNode;
         else
@@ -137,10 +137,10 @@ public class LinkedList<E>
     /**
      * Links e as last element.
      */
-    void linkLast(E e) {
+    void linkLast(E e) { // 添加元素到尾节点
         final Node<E> l = last;
-        final Node<E> newNode = new Node<>(l, e, null);
-        last = newNode;
+        final Node<E> newNode = new Node<>(l, e, null); // 构建尾节点
+        last = newNode; // 赋值给尾节点
         if (l == null)
             first = newNode;
         else
@@ -152,7 +152,7 @@ public class LinkedList<E>
     /**
      * Inserts element e before non-null Node succ.
      */
-    void linkBefore(E e, Node<E> succ) {
+    void linkBefore(E e, Node<E> succ) { // 添加元素到指定节点前（List的特性），链表首尾添加元素时间复杂度为O(1)、链表中间添加元素时间复杂度为O(n)
         // assert succ != null;
         final Node<E> pred = succ.prev;
         final Node<E> newNode = new Node<>(pred, e, succ);
@@ -563,17 +563,17 @@ public class LinkedList<E>
     /**
      * Returns the (non-null) Node at the specified element index.
      */
-    Node<E> node(int index) {
+    Node<E> node(int index) { // 获取指定索引的节点
         // assert isElementIndex(index);
 
-        if (index < (size >> 1)) {
+        if (index < (size >> 1)) { // 二分法
             Node<E> x = first;
-            for (int i = 0; i < index; i++)
+            for (int i = 0; i < index; i++) // 从头节点开始往后遍历到指定位置
                 x = x.next;
             return x;
         } else {
             Node<E> x = last;
-            for (int i = size - 1; i > index; i--)
+            for (int i = size - 1; i > index; i--) // 从尾节点开始往前遍历到指定位置
                 x = x.prev;
             return x;
         }
@@ -782,7 +782,7 @@ public class LinkedList<E>
      * @param e the element to push
      * @since 1.6
      */
-    public void push(E e) {
+    public void push(E e) { // 入栈
         addFirst(e);
     }
 
@@ -797,7 +797,7 @@ public class LinkedList<E>
      * @throws NoSuchElementException if this list is empty
      * @since 1.6
      */
-    public E pop() {
+    public E pop() { // 出栈
         return removeFirst();
     }
 
@@ -967,10 +967,10 @@ public class LinkedList<E>
         }
     }
 
-    private static class Node<E> {
-        E item;
-        Node<E> next;
-        Node<E> prev;
+    private static class Node<E> { // 双向链表节点
+        E item; // 元素
+        Node<E> next; // 后继节点
+        Node<E> prev; // 前驱节点
 
         Node(Node<E> prev, E element, Node<E> next) {
             this.item = element;
