@@ -160,8 +160,8 @@ import java.io.IOException;
  * @see     Hashtable
  * @since   1.4
  */
-public class LinkedHashMap<K,V>
-    extends HashMap<K,V>
+public class LinkedHashMap<K,V> // 内部在HashMap的基础上维护了一个双向链表，能保证元素按插入的顺序访问，也能以访问顺序访问，可以通过设置accessOrder属性和重写removeEldestEntry方法来实现LRU缓存策略
+    extends HashMap<K,V> // 可以看成是HashMap+LinkedList，添加删除元素的时候需要维护HashMap中的存储，也要维护LinkedList中的存储，所以性能上来说会比HashMap稍慢
     implements Map<K,V>
 {
 
@@ -189,7 +189,7 @@ public class LinkedHashMap<K,V>
     /**
      * HashMap.Node subclass for normal LinkedHashMap entries.
      */
-    static class Entry<K,V> extends HashMap.Node<K,V> {
+    static class Entry<K,V> extends HashMap.Node<K,V> { // 存储节点，继承自HashMap的Node类，next用于单链表存储于桶中，before和after用于双向链表存储所有元素
         Entry<K,V> before, after;
         Entry(int hash, K key, V value, Node<K,V> next) {
             super(hash, key, value, next);
@@ -201,12 +201,12 @@ public class LinkedHashMap<K,V>
     /**
      * The head (eldest) of the doubly linked list.
      */
-    transient LinkedHashMap.Entry<K,V> head;
+    transient LinkedHashMap.Entry<K,V> head; // 双向链表头节点
 
     /**
      * The tail (youngest) of the doubly linked list.
      */
-    transient LinkedHashMap.Entry<K,V> tail;
+    transient LinkedHashMap.Entry<K,V> tail; // 双向链表尾节点
 
     /**
      * The iteration ordering method for this linked hash map: <tt>true</tt>
@@ -214,12 +214,12 @@ public class LinkedHashMap<K,V>
      *
      * @serial
      */
-    final boolean accessOrder;
+    final boolean accessOrder; // 是否按访问顺序排序，默认为false、按插入顺序存储元素（如果为false则按插入顺序存储元素，如果是true则按访问顺序存储元素）
 
     // internal utilities
 
     // link at the end of list
-    private void linkNodeLast(LinkedHashMap.Entry<K,V> p) {
+    private void linkNodeLast(LinkedHashMap.Entry<K,V> p) { // 将节点添加到尾节点
         LinkedHashMap.Entry<K,V> last = tail;
         tail = p;
         if (last == null)
@@ -252,10 +252,10 @@ public class LinkedHashMap<K,V>
         head = tail = null;
     }
 
-    Node<K,V> newNode(int hash, K key, V value, Node<K,V> e) {
+    Node<K,V> newNode(int hash, K key, V value, Node<K,V> e) { // 重写了父类中的方法
         LinkedHashMap.Entry<K,V> p =
-            new LinkedHashMap.Entry<K,V>(hash, key, value, e);
-        linkNodeLast(p);
+            new LinkedHashMap.Entry<K,V>(hash, key, value, e); // 创建节点，会调用父类HashMap创建节点
+        linkNodeLast(p); // 将节点添加到尾节点
         return p;
     }
 
@@ -267,9 +267,9 @@ public class LinkedHashMap<K,V>
         return t;
     }
 
-    TreeNode<K,V> newTreeNode(int hash, K key, V value, Node<K,V> next) {
+    TreeNode<K,V> newTreeNode(int hash, K key, V value, Node<K,V> next) { // 重写了父类中的方法
         TreeNode<K,V> p = new TreeNode<K,V>(hash, key, value, next);
-        linkNodeLast(p);
+        linkNodeLast(p); // 将节点添加到尾节点
         return p;
     }
 
@@ -280,7 +280,7 @@ public class LinkedHashMap<K,V>
         return t;
     }
 
-    void afterNodeRemoval(Node<K,V> e) { // unlink
+    void afterNodeRemoval(Node<K,V> e) { // unlink // 删除元素后的钩子方法
         LinkedHashMap.Entry<K,V> p =
             (LinkedHashMap.Entry<K,V>)e, b = p.before, a = p.after;
         p.before = p.after = null;
@@ -294,15 +294,15 @@ public class LinkedHashMap<K,V>
             a.before = b;
     }
 
-    void afterNodeInsertion(boolean evict) { // possibly remove eldest
+    void afterNodeInsertion(boolean evict) { // possibly remove eldest // 添加元素后的钩子方法
         LinkedHashMap.Entry<K,V> first;
-        if (evict && (first = head) != null && removeEldestEntry(first)) {
+        if (evict && (first = head) != null && removeEldestEntry(first)) { // 默认情况下不允许删除元素（如有需要则重写该方法）
             K key = first.key;
-            removeNode(hash(key), key, null, false, true);
+            removeNode(hash(key), key, null, false, true); // 删除头节点
         }
     }
 
-    void afterNodeAccess(Node<K,V> e) { // move node to last
+    void afterNodeAccess(Node<K,V> e) { // move node to last // 将访问的节点移到双向链表的末尾
         LinkedHashMap.Entry<K,V> last;
         if (accessOrder && (last = tail) != e) {
             LinkedHashMap.Entry<K,V> p =
@@ -397,9 +397,9 @@ public class LinkedHashMap<K,V>
      */
     public LinkedHashMap(int initialCapacity,
                          float loadFactor,
-                         boolean accessOrder) {
+                         boolean accessOrder) { // 实例化LinkedHashMap
         super(initialCapacity, loadFactor);
-        this.accessOrder = accessOrder;
+        this.accessOrder = accessOrder; // accessOrder从构造方法参数传入，如果传入true，则就实现了按访问顺序存储元素，这也是实现LRU缓存策略的关键
     }
 
 
@@ -439,8 +439,8 @@ public class LinkedHashMap<K,V>
         Node<K,V> e;
         if ((e = getNode(hash(key), key)) == null)
             return null;
-        if (accessOrder)
-            afterNodeAccess(e);
+        if (accessOrder) // 是否按访问顺序排序，默认为false
+            afterNodeAccess(e); // 在节点访问成功之后调用
         return e.value;
     }
 
@@ -505,7 +505,7 @@ public class LinkedHashMap<K,V>
      * @return   <tt>true</tt> if the eldest entry should be removed
      *           from the map; <tt>false</tt> if it should be retained.
      */
-    protected boolean removeEldestEntry(Map.Entry<K,V> eldest) {
+    protected boolean removeEldestEntry(Map.Entry<K,V> eldest) { // 移除头节点的元素（默认不移除），需要通过重写removeEldestEntry()方法设置何时移除旧元素，如元素个数大于初始容量个数时触发
         return false;
     }
 
