@@ -87,9 +87,9 @@ public abstract class Reference<T> {
      * field is also used for linking Reference objects in the pending list.
      */
 
-    private T referent;         /* Treated specially by GC */
+    private T referent;         /* Treated specially by GC */ // 实际存储的key，它会被gc特殊对待，当没有强引用存在时在下一次gc的时候会被清除
 
-    volatile ReferenceQueue<? super T> queue;
+    volatile ReferenceQueue<? super T> queue; // 引用队列
 
     /* When active:   NULL
      *     pending:   this
@@ -251,7 +251,7 @@ public abstract class Reference<T> {
         this(referent, null);
     }
 
-    Reference(T referent, ReferenceQueue<? super T> queue) {
+    Reference(T referent, ReferenceQueue<? super T> queue) { // 调用Reference的构造方法初始化key和引用队列
         this.referent = referent;
         this.queue = (queue == null) ? ReferenceQueue.NULL : queue;
     }
