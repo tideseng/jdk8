@@ -88,15 +88,15 @@ import java.util.function.UnaryOperator;
  * @author Doug Lea
  * @param <E> the type of elements held in this collection
  */
-public class CopyOnWriteArrayList<E>
+public class CopyOnWriteArrayList<E> // ArrayList的线程安全版本（内部通过数组实现，每次对数组的修改都是拷贝一份新的数组来修改，修改完了再替换掉老数组，这样保证了只阻塞写操作，不阻塞读操作，实现读写分离）
     implements List<E>, RandomAccess, Cloneable, java.io.Serializable {
     private static final long serialVersionUID = 8673264195747942595L;
 
     /** The lock protecting all mutators */
-    final transient ReentrantLock lock = new ReentrantLock();
+    final transient ReentrantLock lock = new ReentrantLock(); // 可重入锁，用于修改时加锁（使用transient是为了不序列化该属性）
 
     /** The array, accessed only via getArray/setArray. */
-    private transient volatile Object[] array;
+    private transient volatile Object[] array; // 存储元素的真实数组，该数组的长度就是元素的个数，所以没有size属性（使用transient是为了不序列化该属性，不会根据数组的长度序列化元素，而是自己根据size大小来序列化真实的元素，减少了空间占用）
 
     /**
      * Gets the array.  Non-private so as to also be accessible
@@ -128,7 +128,7 @@ public class CopyOnWriteArrayList<E>
      * @param c the collection of initially held elements
      * @throws NullPointerException if the specified collection is null
      */
-    public CopyOnWriteArrayList(Collection<? extends E> c) {
+    public CopyOnWriteArrayList(Collection<? extends E> c) { // 指定初始集合元素（浅拷贝）
         Object[] elements;
         if (c.getClass() == CopyOnWriteArrayList.class)
             elements = ((CopyOnWriteArrayList<?>)c).getArray();
