@@ -906,7 +906,7 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V> // HashMap的线程
     /**
      * {@inheritDoc}
      */
-    public int size() { // 并不是实时更新，可能是脏数据
+    public int size() { // 并不是实时更新，可能是脏数据（返回类型为int，推荐使用mappingCount）
         long n = sumCount();
         return ((n < 0L) ? 0 :
                 (n > (long)Integer.MAX_VALUE) ? Integer.MAX_VALUE :
@@ -2263,7 +2263,7 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V> // HashMap的线程
                 (a = as[ThreadLocalRandom.getProbe() & m]) == null ||
                 !(uncontended =
                   U.compareAndSwapLong(a, CELLVALUE, v = a.value, v + x))) { // 如果as为空 或者长度为0 或者随机分段的CounterCell为null 或者在随机分段的CounterCell上加数量失败
-                fullAddCount(x, uncontended); // 强制增加数量
+                fullAddCount(x, uncontended); // 强制增加数量，原理同Striped64
                 return;
             }
             if (check <= 1)
@@ -2364,11 +2364,11 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V> // HashMap的线程
      * Moves and/or copies the nodes in each bin to new table. See
      * above for explanation.
      */
-    private final void transfer(Node<K,V>[] tab, Node<K,V>[] nextTab) {
-        int n = tab.length, stride;
-        if ((stride = (NCPU > 1) ? (n >>> 3) / NCPU : n) < MIN_TRANSFER_STRIDE) // 段空间长度最小为16
-            stride = MIN_TRANSFER_STRIDE; // subdivide range
-        if (nextTab == null) {            // initiating
+    private final void transfer(Node<K,V>[] tab, Node<K,V>[] nextTab) { // 扩容
+        int n = tab.length, stride; // 获取原数组长度
+        if ((stride = (NCPU > 1) ? (n >>> 3) / NCPU : n) < MIN_TRANSFER_STRIDE) // 当可用核心数大于1时，段空间为原数组长度/8/可用核心数，反之为原数组长度
+            stride = MIN_TRANSFER_STRIDE; // subdivide range // 段空间长度最小为16，即每个线程最少迁移16个槽位
+        if (nextTab == null) {            // initiating // 初始化新数组
             try {
                 @SuppressWarnings("unchecked")
                 Node<K,V>[] nt = (Node<K,V>[])new Node<?,?>[n << 1]; // 新数组扩容2倍
@@ -2377,8 +2377,8 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V> // HashMap的线程
                 sizeCtl = Integer.MAX_VALUE;
                 return;
             }
-            nextTable = nextTab; // 新数组
-            transferIndex = n;
+            nextTable = nextTab; // 赋值给新数组
+            transferIndex = n; // 初始化新数组时，transferIndex为原数组长度
         }
         int nextn = nextTab.length; // 新数组长度
         ForwardingNode<K,V> fwd = new ForwardingNode<K,V>(nextTab); // 新建一个ForwardingNode类型的节点，并把新桶数组存储在里面
@@ -2386,19 +2386,19 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V> // HashMap的线程
         boolean finishing = false; // to ensure sweep before committing nextTab
         for (int i = 0, bound = 0;;) {
             Node<K,V> f; int fh;
-            while (advance) {
+            while (advance) { // 默认为true
                 int nextIndex, nextBound;
-                if (--i >= bound || finishing)
+                if (--i >= bound || finishing) // i递减，即从后往前进行迁移
                     advance = false;
-                else if ((nextIndex = transferIndex) <= 0) {
+                else if ((nextIndex = transferIndex) <= 0) { // 当transferIndex减到0时
                     i = -1;
                     advance = false;
                 }
                 else if (U.compareAndSwapInt
-                         (this, TRANSFERINDEX, nextIndex,
+                         (this, TRANSFERINDEX, nextIndex, // 当transferIndex没减到0时，通过cas操作，将transferIndex减段空间长度，直到为0
                           nextBound = (nextIndex > stride ?
                                        nextIndex - stride : 0))) {
-                    bound = nextBound; // 假设原数组长度为32时，第一个线程第一次循环时会将：transferIndex=32、i=0、nextIndex=32 修改为：transferIndex=16、nextbound=16、bound=16、i=32
+                    bound = nextBound; // 假设原数组长度为32时，第一个线程第一次循环时会将：transferIndex=32、i=0、nextIndex=32 修改为：transferIndex=16、nextbound=16、bound=16、i=31
                     i = nextIndex - 1; // 假设原数组长度为32时，第二个线程第一次循环时会将：transferIndex=16、i=0、nextIndex=16 修改为：transferIndex=0、nextbound=0、bound=0、i=15
                     advance = false;
                 }
@@ -2407,9 +2407,9 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V> // HashMap的线程
                 int sc;
                 if (finishing) {
                     nextTable = null;
-                    table = nextTab;
-                    sizeCtl = (n << 1) - (n >>> 1);
-                    return;
+                    table = nextTab; // 将table指向新数组，即直接将旧table上面的MOVE等标志全部丢弃
+                    sizeCtl = (n << 1) - (n >>> 1); // 更新容量门槛（2n-0.5n=2n-2n*(1/4)=2n*(3/4)=2n*0.75）
+                    return; // 跳出循环
                 }
                 if (U.compareAndSwapInt(this, SIZECTL, sc = sizeCtl, sc - 1)) {
                     if ((sc - 2) != resizeStamp(n) << RESIZE_STAMP_SHIFT)
@@ -2419,44 +2419,44 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V> // HashMap的线程
                 }
             }
             else if ((f = tabAt(tab, i)) == null) // 当前数组下标位置没有元素
-                advance = casTabAt(tab, i, null, fwd); // 标记处理
-            else if ((fh = f.hash) == MOVED) // 已经处理
+                advance = casTabAt(tab, i, null, fwd); // 标记处理，再次进入while循环，使i递减，即从后往前进行迁移
+            else if ((fh = f.hash) == MOVED) // 已经处理，再次进入while循环，使i递减，即从后往前进行迁移
                 advance = true; // already processed
-            else {
-                synchronized (f) {
-                    if (tabAt(tab, i) == f) {
-                        Node<K,V> ln, hn;
-                        if (fh >= 0) {
-                            int runBit = fh & n;
+            else { // 需要迁移
+                synchronized (f) { // 对桶中第一个元素使用synchronized加锁
+                    if (tabAt(tab, i) == f) { // 防止第一个元素已经改变
+                        Node<K,V> ln, hn; // 定义高位链表和低位链表
+                        if (fh >= 0) { // 链表
+                            int runBit = fh & n; // 当前节点的hash&n结果值
                             Node<K,V> lastRun = f;
-                            for (Node<K,V> p = f.next; p != null; p = p.next) {
-                                int b = p.hash & n;
-                                if (b != runBit) {
+                            for (Node<K,V> p = f.next; p != null; p = p.next) { // 遍历当前桶，获取最后一个不产生变化的节点
+                                int b = p.hash & n; // 下一节点的hash&n结果值
+                                if (b != runBit) { // 如果当前节点的hash&n结果值与下一节点的结果值不同时，获取下一节点的hash&n结果值、下一节点引用
                                     runBit = b;
                                     lastRun = p;
                                 }
                             }
                             if (runBit == 0) {
-                                ln = lastRun;
+                                ln = lastRun; // 最后一个不产生变化的低位节点
                                 hn = null;
                             }
                             else {
-                                hn = lastRun;
+                                hn = lastRun; // 最后一个不产生变化的高位节点
                                 ln = null;
                             }
-                            for (Node<K,V> p = f; p != lastRun; p = p.next) {
-                                int ph = p.hash; K pk = p.key; V pv = p.val;
-                                if ((ph & n) == 0)
-                                    ln = new Node<K,V>(ph, pk, pv, ln);
-                                else
-                                    hn = new Node<K,V>(ph, pk, pv, hn);
+                            for (Node<K,V> p = f; p != lastRun; p = p.next) { // 遍历当前桶，遍历到最后一个不产生变化的节点则跳出循环
+                                int ph = p.hash; K pk = p.key; V pv = p.val; // 当前节点的hash、key、value
+                                if ((ph & n) == 0) // 低位节点
+                                    ln = new Node<K,V>(ph, pk, pv, ln); // 迁移结果为：以最后一个不产生变化的节点为界，前面的节点倒序、后面的节点顺序
+                                else // 高位节点
+                                    hn = new Node<K,V>(ph, pk, pv, hn); // 迁移结果为：以最后一个不产生变化的节点为界，前面的节点倒序、后面的节点顺序
                             }
-                            setTabAt(nextTab, i, ln);
-                            setTabAt(nextTab, i + n, hn);
+                            setTabAt(nextTab, i, ln); // 设置低位链表
+                            setTabAt(nextTab, i + n, hn); // 设置高位链表
                             setTabAt(tab, i, fwd);
-                            advance = true;
+                            advance = true; // 再次进入while循环，使i递减，即从后往前进行迁移
                         }
-                        else if (f instanceof TreeBin) {
+                        else if (f instanceof TreeBin) { // 红黑树
                             TreeBin<K,V> t = (TreeBin<K,V>)f;
                             TreeNode<K,V> lo = null, loTail = null;
                             TreeNode<K,V> hi = null, hiTail = null;
@@ -2503,7 +2503,7 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V> // HashMap的线程
      * A padded cell for distributing counts.  Adapted from LongAdder
      * and Striped64.  See their internal docs for explanation.
      */
-    @sun.misc.Contended static final class CounterCell {
+    @sun.misc.Contended static final class CounterCell { // 改编自LongAdder和Striped64
         volatile long value;
         CounterCell(long x) { value = x; }
     }
@@ -2521,7 +2521,7 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V> // HashMap的线程
     }
 
     // See LongAdder version for explanation
-    private final void fullAddCount(long x, boolean wasUncontended) { // 强制增加数量
+    private final void fullAddCount(long x, boolean wasUncontended) { // 强制增加数量，原理同Striped64
         int h;
         if ((h = ThreadLocalRandom.getProbe()) == 0) {
             ThreadLocalRandom.localInit();      // force initialization
