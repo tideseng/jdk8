@@ -2134,7 +2134,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
      * @throws ClassCastException {@inheritDoc}
      * @throws NullPointerException if the specified key is null
      */
-    public K lowerKey(K key) {
+    public K lowerKey(K key) { // 小于e的最大元素
         Node<K,V> n = findNear(key, LT, comparator);
         return (n == null) ? null : n.key;
     }
@@ -2158,7 +2158,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
      * @throws ClassCastException {@inheritDoc}
      * @throws NullPointerException if the specified key is null
      */
-    public K floorKey(K key) {
+    public K floorKey(K key) { // 小于等于e的最大元素
         Node<K,V> n = findNear(key, LT|EQ, comparator);
         return (n == null) ? null : n.key;
     }
@@ -2180,7 +2180,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
      * @throws ClassCastException {@inheritDoc}
      * @throws NullPointerException if the specified key is null
      */
-    public K ceilingKey(K key) {
+    public K ceilingKey(K key) { // 大于等于e的最小元素
         Node<K,V> n = findNear(key, GT|EQ, comparator);
         return (n == null) ? null : n.key;
     }
@@ -2204,7 +2204,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
      * @throws ClassCastException {@inheritDoc}
      * @throws NullPointerException if the specified key is null
      */
-    public K higherKey(K key) {
+    public K higherKey(K key) { // 大于e的最小元素
         Node<K,V> n = findNear(key, GT, comparator);
         return (n == null) ? null : n.key;
     }
