@@ -91,9 +91,9 @@ import java.util.Spliterator;
  * @param <E> the type of elements maintained by this set
  * @since 1.6
  */
-public class ConcurrentSkipListSet<E>
+public class ConcurrentSkipListSet<E> // 有序的线程安全的集合，底层通过ConcurrentSkipListMap实现，跟通过Map实现的Set基本是一致，只是多了一些取最近的元素的方法
     extends AbstractSet<E>
-    implements NavigableSet<E>, Cloneable, java.io.Serializable {
+    implements NavigableSet<E>, Cloneable, java.io.Serializable { // 实现了NavigableSet接口，并没有所谓的ConcurrentNavigableSet接口
 
     private static final long serialVersionUID = -2479143111061671589L;
 
@@ -102,13 +102,13 @@ public class ConcurrentSkipListSet<E>
      * element.  This field is declared final for the sake of thread
      * safety, which entails some ugliness in clone().
      */
-    private final ConcurrentNavigableMap<E,Object> m;
+    private final ConcurrentNavigableMap<E,Object> m; // 存储使用的map，默认情况下为ConcurrentSkipListMap
 
     /**
      * Constructs a new, empty set that orders its elements according to
      * their {@linkplain Comparable natural ordering}.
      */
-    public ConcurrentSkipListSet() {
+    public ConcurrentSkipListSet() { // 默认的无参构造方法，初始化ConcurrentSkipListMap
         m = new ConcurrentSkipListMap<E,Object>();
     }
 
@@ -120,7 +120,7 @@ public class ConcurrentSkipListSet<E>
      *        If {@code null}, the {@linkplain Comparable natural
      *        ordering} of the elements will be used.
      */
-    public ConcurrentSkipListSet(Comparator<? super E> comparator) {
+    public ConcurrentSkipListSet(Comparator<? super E> comparator) { // 指定比较器的有参构造方法
         m = new ConcurrentSkipListMap<E,Object>(comparator);
     }
 
@@ -237,7 +237,7 @@ public class ConcurrentSkipListSet<E>
      *         with the elements currently in this set
      * @throws NullPointerException if the specified element is null
      */
-    public boolean add(E e) {
+    public boolean add(E e) { // 添加元素，调用ConcurrentSkipListMap#putIfAbsent方法，value固定为Boolean.TRUE
         return m.putIfAbsent(e, Boolean.TRUE) == null;
     }
 
