@@ -914,21 +914,21 @@ public class HashMap<K,V> extends AbstractMap<K,V> // 采用了数组+链表+红
         public final boolean remove(Object key) {
             return removeNode(hash(key), key, null, false, true) != null;
         }
-        public final Spliterator<K> spliterator() {
+        public final Spliterator<K> spliterator() { // 可分割的迭代器, 主要用于多线程并行迭代处理时使用
             return new KeySpliterator<>(HashMap.this, 0, -1, 0, 0);
         }
-        public final void forEach(Consumer<? super K> action) {
+        public final void forEach(Consumer<? super K> action) { // KeySet遍历方法
             Node<K,V>[] tab;
             if (action == null)
                 throw new NullPointerException();
             if (size > 0 && (tab = table) != null) {
-                int mc = modCount;
+                int mc = modCount; // 在遍历前记录modCount值
                 for (int i = 0; i < tab.length; ++i) {
                     for (Node<K,V> e = tab[i]; e != null; e = e.next)
                         action.accept(e.key);
                 }
-                if (modCount != mc)
-                    throw new ConcurrentModificationException();
+                if (modCount != mc) // 在遍历后比较记录modCount值是否与当前值相同
+                    throw new ConcurrentModificationException(); // fail-fast机制是java集合中的一种错误机制，当使用迭代器迭代时，如果发现集合有修改，则快速失败做出响应，抛出ConcurrentModificationException异常
             }
         }
     }
@@ -961,7 +961,7 @@ public class HashMap<K,V> extends AbstractMap<K,V> // 采用了数组+链表+红
         public final Spliterator<V> spliterator() {
             return new ValueSpliterator<>(HashMap.this, 0, -1, 0, 0);
         }
-        public final void forEach(Consumer<? super V> action) {
+        public final void forEach(Consumer<? super V> action) { // Values遍历方法
             Node<K,V>[] tab;
             if (action == null)
                 throw new NullPointerException();
