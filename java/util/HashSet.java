@@ -86,16 +86,16 @@ import java.io.InvalidObjectException;
  * @since   1.2
  */
 
-public class HashSet<E>
+public class HashSet<E> // 无序的非线程安全的Set集合，底层通过HashMap/LinkedHashMap实现
     extends AbstractSet<E>
     implements Set<E>, Cloneable, java.io.Serializable
 {
     static final long serialVersionUID = -5024744406713321676L;
 
-    private transient HashMap<E,Object> map;
+    private transient HashMap<E,Object> map; // 存储使用的HashMap/LinkedHashMap
 
     // Dummy value to associate with an Object in the backing Map
-    private static final Object PRESENT = new Object();
+    private static final Object PRESENT = new Object(); // 存储到HashMap/LinkedHashMap中的value值
 
     /**
      * Constructs a new, empty set; the backing <tt>HashMap</tt> instance has
@@ -157,8 +157,8 @@ public class HashSet<E>
      * @throws     IllegalArgumentException if the initial capacity is less
      *             than zero, or if the load factor is nonpositive
      */
-    HashSet(int initialCapacity, float loadFactor, boolean dummy) {
-        map = new LinkedHashMap<>(initialCapacity, loadFactor);
+    HashSet(int initialCapacity, float loadFactor, boolean dummy) { // 非public修饰，子类LinkedHashSet专属调用
+        map = new LinkedHashMap<>(initialCapacity, loadFactor); // 只有被子类LinkedHashSet构造方法调用时，会初始化LinkedHashMap，而非HashMap
     }
 
     /**
@@ -168,7 +168,7 @@ public class HashSet<E>
      * @return an Iterator over the elements in this set
      * @see ConcurrentModificationException
      */
-    public Iterator<E> iterator() {
+    public Iterator<E> iterator() { // 遍历元素，直接调用map的keySet的迭代器
         return map.keySet().iterator();
     }
 
@@ -215,7 +215,7 @@ public class HashSet<E>
      * @return <tt>true</tt> if this set did not already contain the specified
      * element
      */
-    public boolean add(E e) {
+    public boolean add(E e) { // 直接调用HashMap的put()方法，将元素本身作为key、PRESENT作为value，即map中所有的value都是一样的
         return map.put(e, PRESENT)==null;
     }
 
@@ -270,20 +270,20 @@ public class HashSet<E>
      *             (int), followed by all of its elements (each an Object) in
      *             no particular order.
      */
-    private void writeObject(java.io.ObjectOutputStream s)
+    private void writeObject(java.io.ObjectOutputStream s) // 序列化写出方法
         throws java.io.IOException {
         // Write out any hidden serialization magic
-        s.defaultWriteObject();
+        s.defaultWriteObject(); // 写出非static、非transient属性
 
         // Write out HashMap capacity and load factor
-        s.writeInt(map.capacity());
+        s.writeInt(map.capacity()); // 写出map的容量和装载因子
         s.writeFloat(map.loadFactor());
 
         // Write out size
-        s.writeInt(map.size());
+        s.writeInt(map.size()); // 写出元素个数
 
         // Write out all elements in the proper order.
-        for (E e : map.keySet())
+        for (E e : map.keySet()) // 遍历写出所有元素
             s.writeObject(e);
     }
 
@@ -291,27 +291,27 @@ public class HashSet<E>
      * Reconstitute the <tt>HashSet</tt> instance from a stream (that is,
      * deserialize it).
      */
-    private void readObject(java.io.ObjectInputStream s)
+    private void readObject(java.io.ObjectInputStream s) // 序列化读入方法
         throws java.io.IOException, ClassNotFoundException {
         // Read in any hidden serialization magic
-        s.defaultReadObject();
+        s.defaultReadObject(); // 读入非static非transient属性
 
         // Read capacity and verify non-negative.
-        int capacity = s.readInt();
+        int capacity = s.readInt(); // 读入容量, 并检查不能小于0
         if (capacity < 0) {
             throw new InvalidObjectException("Illegal capacity: " +
                                              capacity);
         }
 
         // Read load factor and verify positive and non NaN.
-        float loadFactor = s.readFloat();
+        float loadFactor = s.readFloat(); // 读入装载因子, 并检查不能小于等于0或者是NaN(Not a Number)
         if (loadFactor <= 0 || Float.isNaN(loadFactor)) {
             throw new InvalidObjectException("Illegal load factor: " +
                                              loadFactor);
         }
 
         // Read size and verify non-negative.
-        int size = s.readInt();
+        int size = s.readInt(); // 读入元素个数并检查不能小于0
         if (size < 0) {
             throw new InvalidObjectException("Illegal size: " +
                                              size);
@@ -319,18 +319,18 @@ public class HashSet<E>
 
         // Set the capacity according to the size and load factor ensuring that
         // the HashMap is at least 25% full but clamping to maximum capacity.
-        capacity = (int) Math.min(size * Math.min(1 / loadFactor, 4.0f),
+        capacity = (int) Math.min(size * Math.min(1 / loadFactor, 4.0f), // 根据元素个数重新设置容量，这是为了保证map有足够的容量容纳所有元素, 防止无意义的扩容
                 HashMap.MAXIMUM_CAPACITY);
 
         // Create backing HashMap
-        map = (((HashSet<?>)this) instanceof LinkedHashSet ?
+        map = (((HashSet<?>)this) instanceof LinkedHashSet ? // 创建map, 检查是不是LinkedHashSet类型
                new LinkedHashMap<E,Object>(capacity, loadFactor) :
                new HashMap<E,Object>(capacity, loadFactor));
 
         // Read in all elements in the proper order.
         for (int i=0; i<size; i++) {
             @SuppressWarnings("unchecked")
-                E e = (E) s.readObject();
+                E e = (E) s.readObject(); // 读入所有元素, 并放入map中
             map.put(e, PRESENT);
         }
     }
@@ -347,7 +347,7 @@ public class HashSet<E>
      * @return a {@code Spliterator} over the elements in this set
      * @since 1.8
      */
-    public Spliterator<E> spliterator() {
+    public Spliterator<E> spliterator() { // 可分割的迭代器, 主要用于多线程并行迭代处理时使用
         return new HashMap.KeySpliterator<E,Object>(map, 0, -1, 0, 0);
     }
 }
