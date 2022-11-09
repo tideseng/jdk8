@@ -115,9 +115,9 @@ package java.util;
  * @since   1.4
  */
 
-public class LinkedHashSet<E>
-    extends HashSet<E>
-    implements Set<E>, Cloneable, java.io.Serializable {
+public class LinkedHashSet<E> // 有序的非线程安全的Set集合，底层通过LinkedHashMap实现，但不支持按访问顺序对元素排序的，只能按插入顺序排序
+    extends HashSet<E> // 继承自HashSet，会调用HashSet的非public构造函数创建储存使用的LinkedHashMap，它的添加、删除、查询等方法都是直接用的HashSet的，唯一的不同就是它使用LinkedHashMap存储元素
+    implements Set<E>, Cloneable, java.io.Serializable { // LinkedHashSet中一共提供了5个方法，其中4个是构造方法，还有一个是迭代器
 
     private static final long serialVersionUID = -2851667679971038690L;
 
@@ -189,7 +189,7 @@ public class LinkedHashSet<E>
      * @since 1.8
      */
     @Override
-    public Spliterator<E> spliterator() {
+    public Spliterator<E> spliterator() { // 可分割的迭代器, 主要用于多线程并行迭代处理时使用
         return Spliterators.spliterator(this, Spliterator.DISTINCT | Spliterator.ORDERED);
     }
 }
