@@ -89,22 +89,22 @@ package java.util;
  * @since   1.2
  */
 
-public class TreeSet<E> extends AbstractSet<E>
+public class TreeSet<E> extends AbstractSet<E> // 有序的非线程安全的Set集合，底层通过NavigableMap实现（默认为TreeMap，但不一定就是TreeMap）
     implements NavigableSet<E>, Cloneable, java.io.Serializable
 {
     /**
      * The backing map.
      */
-    private transient NavigableMap<E,Object> m;
+    private transient NavigableMap<E,Object> m; // 存储使用的NavigableMap
 
     // Dummy value to associate with an Object in the backing Map
-    private static final Object PRESENT = new Object();
+    private static final Object PRESENT = new Object(); // 存储到NavigableMap的value值
 
     /**
      * Constructs a set backed by the specified navigable map.
      */
-    TreeSet(NavigableMap<E,Object> m) {
-        this.m = m;
+    TreeSet(NavigableMap<E,Object> m) { // 可以传入ConcurrentSkipListMap、TreeMap等，非public，只能在同包中使用
+        this.m = m; // 直接赋值，没有深拷贝，如果外面的map有增删元素也会反映到这里
     }
 
     /**
