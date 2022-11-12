@@ -113,7 +113,7 @@ import java.util.function.Function;
  * @param <V> the type of mapped values
  * @since 1.6
  */
-public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
+public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V> // 支持并发的调表，实质是在原有的有序链表上面增加多级索引，通过索引来进行快速查找/二分查找的有序链表
     implements ConcurrentNavigableMap<K,V>, Cloneable, Serializable {
     /*
      * This class implements a tree-like two-dimensionally linked skip
@@ -365,7 +365,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
     /**
      * The topmost head index of the skiplist.
      */
-    private transient volatile HeadIndex<K,V> head; // 最高层的头索引节点
+    private transient volatile HeadIndex<K,V> head; // 最高层的头索引节点，继承自Index，具有向下和向右的指针
 
     /**
      * The comparator used to maintain order in this map, or null if
@@ -394,14 +394,14 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
         entrySet = null;
         values = null;
         descendingMap = null;
-        head = new HeadIndex<K,V>(new Node<K,V>(null, BASE_HEADER, null), // 创建一个层级为1的头索引节点
+        head = new HeadIndex<K,V>(new Node<K,V>(null, BASE_HEADER, null), // 初始化头索引节点（层级是1、数据节点是一个空对象、down和right都是null），并赋值给最高层的头索引节点
                                   null, null, 1);
     }
 
     /**
      * compareAndSet head node
      */
-    private boolean casHead(HeadIndex<K,V> cmp, HeadIndex<K,V> val) {
+    private boolean casHead(HeadIndex<K,V> cmp, HeadIndex<K,V> val) { // cas设置最高层头索引节点
         return UNSAFE.compareAndSwapObject(this, headOffset, cmp, val);
     }
 
@@ -414,7 +414,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
      * is declared only as Object because it takes special non-V
      * values for marker and header nodes.
      */
-    static final class Node<K,V> { // 数据节点，典型的单向链表结构
+    static final class Node<K,V> { // 数据节点，典型的单向链表结构（在Redis中是反向的单向链表结构）
         final K key;
         volatile Object value; // value的类型是Object，而不是泛型（在删除元素的时候value会指向当前元素本身）
         volatile Node<K,V> next;
@@ -464,7 +464,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
          *
          * @return true if this node is a marker node
          */
-        boolean isMarker() {
+        boolean isMarker() { // 是否标记删除
             return value == this;
         }
 
