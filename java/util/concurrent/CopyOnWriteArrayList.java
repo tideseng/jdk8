@@ -392,7 +392,7 @@ public class CopyOnWriteArrayList<E> // ArrayList的线程安全版本（内部�
      *
      * @throws IndexOutOfBoundsException {@inheritDoc}
      */
-    public E get(int index) {
+    public E get(int index) { // 获取元素，不加锁，读写分离的思想
         return get(getArray(), index);
     }
 
@@ -430,7 +430,7 @@ public class CopyOnWriteArrayList<E> // ArrayList的线程安全版本（内部�
      * @param e element to be appended to this list
      * @return {@code true} (as specified by {@link Collection#add})
      */
-    public boolean add(E e) {
+    public boolean add(E e) { // 添加元素，会加锁进行阻塞
         final ReentrantLock lock = this.lock;
         lock.lock();
         try {
