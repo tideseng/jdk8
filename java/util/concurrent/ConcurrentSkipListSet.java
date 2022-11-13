@@ -156,7 +156,7 @@ public class ConcurrentSkipListSet<E> // 有序的线程安全的集合，底层
     /**
      * For use by submaps
      */
-    ConcurrentSkipListSet(ConcurrentNavigableMap<E,Object> m) {
+    ConcurrentSkipListSet(ConcurrentNavigableMap<E,Object> m) { // 非public修饰，当前类中使用
         this.m = m;
     }
 
