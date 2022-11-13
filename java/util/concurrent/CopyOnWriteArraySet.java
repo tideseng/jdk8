@@ -93,11 +93,11 @@ import java.util.function.Consumer;
  * @author Doug Lea
  * @param <E> the type of elements held in this collection
  */
-public class CopyOnWriteArraySet<E> extends AbstractSet<E>
+public class CopyOnWriteArraySet<E> extends AbstractSet<E> // 有序的线程安全的Set集合，底层使用CopyOnWriteArrayList存储元素的，并不是使用Map来存储
         implements java.io.Serializable {
     private static final long serialVersionUID = 5457747651344034263L;
 
-    private final CopyOnWriteArrayList<E> al;
+    private final CopyOnWriteArrayList<E> al; // 内部使用CopyOnWriteArrayList存储元素
 
     /**
      * Creates an empty set.
@@ -257,7 +257,7 @@ public class CopyOnWriteArraySet<E> extends AbstractSet<E>
      * @return {@code true} if this set did not already contain the specified
      *         element
      */
-    public boolean add(E e) {
+    public boolean add(E e) { // 添加元素，调用CopyOnWriteArrayList的addIfAbsent()方法，会遍历整个集合元素
         return al.addIfAbsent(e);
     }
 
